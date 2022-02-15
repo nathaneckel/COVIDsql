@@ -50,7 +50,7 @@ Order by TotalDeathCount desc
 
 --LET BREAK IT DOWN BY CONTINENT
 
-SELECT location, MAX(cast (total_deaths as int)) as TotalDeathCount
+SELECT continent, MAX(cast (total_deaths as int)) as TotalDeathCount
 From CovidDeaths
 --Where location like '%state%'
 WHERE continent IS NOT NULL
@@ -77,6 +77,7 @@ WHERE continent IS NOT NULL
 Order by 1,2
 
 -- LOOKING AT TOTAL POPULATION VS VACCINATIONS
+-- Shows Percentage of Population that has recieved at least one Covid Vaccine
 
 SELECT d.continent, d.location, d.date, d.population, v.new_vaccinations
 , SUM(CONVERT(bigint,v.new_vaccinations)) 
@@ -91,11 +92,13 @@ WHERE d.continent IS NOT NULL
 ORDER BY 2,3
 
 --USE CTE / "With" statement
+-- Using CTE to perform Calculation on Partition By in previous query
+
 
 With PopVsVac (Continent, Location, Date, Population, New_Vaccinations, RollingPeopleVaccinated)
 as
 (
-SELECT d.continent, d.location, d.date, d.population, v.new_vaccinations
+SELECT d.continent, d.location, d.date, d.population, v.new_vaccinations 
 , SUM(CAST(v.new_vaccinations AS bigint)) 
 OVER (Partition by d.location ORDER BY d.location, d.date) 
 as RollingPeopleVaccinated
@@ -112,6 +115,8 @@ FROM PopVsVac
 
 
 --TEMP TABLE
+-- Using Temp Table to perform Calculation on Partition By in previous query
+
 
 DROP TABLE IF EXISTS #PercentPopulationVaccinated
 
@@ -144,11 +149,8 @@ FROM #PercentPopulationVaccinated
 
 --CREATING VIEW TO STORE DATA FOR LATER VISUALIZATIONS
 
---END 1:11
-
-
 CREATE VIEW PercentPopulationVaccinated as
-SELECT d.continent, d.location, d.date, d.population, v.new_vaccinations
+SELECT d.continent, d.location, d.date, d.population, v.new_vaccinations  
 , SUM(CAST(v.new_vaccinations AS bigint)) 
 OVER (Partition by d.location ORDER BY d.location, d.date) 
 as RollingPeopleVaccinated
